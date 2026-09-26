@@ -1,10 +1,12 @@
 import React from "react";
 import type { Item } from "../types";
-import { ListTodo, Pencil, Trash2, Inbox } from "lucide-react";
+import { ListTodo, Pencil, Trash2, Inbox, Loader2 } from "lucide-react";
 
 interface ItemListProps {
   items: Item[];
   editingId: string | null;
+  deletingId?: string | null;
+  submitting?: boolean;
   onEdit: (item: Item) => void;
   onDelete: (id: string) => void;
 }
@@ -12,6 +14,8 @@ interface ItemListProps {
 export const ItemList: React.FC<ItemListProps> = ({
   items,
   editingId,
+  deletingId = null,
+  submitting = false,
   onEdit,
   onDelete,
 }) => {
@@ -68,7 +72,8 @@ export const ItemList: React.FC<ItemListProps> = ({
                   <button
                     onClick={() => onEdit(item)}
                     type="button"
-                    className={`flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
+                    disabled={submitting || deletingId !== null}
+                    className={`flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       isCurrentlyEditing
                         ? "bg-amber-100 text-amber-900 border-amber-300"
                         : "text-zinc-700 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 border-zinc-200"
@@ -81,10 +86,15 @@ export const ItemList: React.FC<ItemListProps> = ({
                   <button
                     onClick={() => onDelete(item.id)}
                     type="button"
-                    className="flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md border border-red-200 transition-colors cursor-pointer"
+                    disabled={submitting || deletingId !== null}
+                    className="flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-md border border-red-200 transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete</span>
+                    {deletingId === item.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>{deletingId === item.id ? "Deleting..." : "Delete"}</span>
                   </button>
                 </div>
               </div>

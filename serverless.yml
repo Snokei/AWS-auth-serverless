@@ -1,6 +1,6 @@
 service: express-jwt-auth
 
-frameworkVersion: '3'
+frameworkVersion: '>=3.0.0'
 
 provider:
   name: aws
@@ -9,6 +9,13 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 10
+  httpApi:
+    cors: true
+    metrics: true
+    throttling:
+      maxConcurrentRequests: 100
+      rateLimit: 50
+      burstLimit: 100
   environment:
     NODE_ENV: production
     USERS_TABLE: express-jwt-users

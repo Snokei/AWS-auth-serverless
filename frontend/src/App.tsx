@@ -32,6 +32,8 @@ function App() {
 
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [loading, setLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch items from backend API when logged in
@@ -88,6 +90,7 @@ function App() {
     if (!form.name.trim() || !form.description.trim()) return;
 
     setError(null);
+    setSubmitting(true);
     try {
       if (appState.editingId) {
         // UPDATE Item
@@ -108,6 +111,7 @@ function App() {
             ),
             editingId: null,
           }));
+          setForm(INITIAL_FORM);
         } else {
           setError(data.error || "Failed to update item");
         }
@@ -127,14 +131,16 @@ function App() {
             ...prev,
             items: [data.item, ...prev.items],
           }));
+          setForm(INITIAL_FORM);
         } else {
           setError(data.error || "Failed to create item");
         }
       }
-      setForm(INITIAL_FORM);
     } catch (err: any) {
       console.error("Submit error:", err);
       setError("Network error saving item.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -148,6 +154,7 @@ function App() {
 
   const handleDelete = async (id: string) => {
     setError(null);
+    setDeletingId(id);
     try {
       const res = await fetch(getApiUrl(`list/${id}`), {
         method: "DELETE",
@@ -171,6 +178,8 @@ function App() {
     } catch (err: any) {
       console.error("Delete error:", err);
       setError("Network error deleting item.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -269,6 +278,7 @@ function App() {
         <ItemForm
           form={form}
           editingId={appState.editingId}
+          submitting={submitting}
           onInputChange={handleInputChange}
           onSubmit={handleSubmit}
           onCancelEdit={handleCancelEdit}
@@ -278,6 +288,8 @@ function App() {
         <ItemList
           items={appState.items}
           editingId={appState.editingId}
+          deletingId={deletingId}
+          submitting={submitting}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

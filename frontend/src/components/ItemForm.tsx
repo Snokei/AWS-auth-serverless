@@ -1,10 +1,11 @@
 import React from "react";
 import type { FormData } from "../types";
-import { Plus, Pencil, Check, X } from "lucide-react";
+import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
 
 interface ItemFormProps {
   form: FormData;
   editingId: string | null;
+  submitting?: boolean;
   onInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -15,6 +16,7 @@ interface ItemFormProps {
 export const ItemForm: React.FC<ItemFormProps> = ({
   form,
   editingId,
+  submitting = false,
   onInputChange,
   onSubmit,
   onCancelEdit,
@@ -50,7 +52,8 @@ export const ItemForm: React.FC<ItemFormProps> = ({
             id="name"
             value={form.name}
             onChange={onInputChange}
-            className="w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-colors"
+            disabled={submitting}
+            className="w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-colors disabled:bg-zinc-100 disabled:cursor-not-allowed"
             placeholder="e.g. Serverless Auth Module"
             required
           />
@@ -67,8 +70,9 @@ export const ItemForm: React.FC<ItemFormProps> = ({
             id="description"
             value={form.description}
             onChange={onInputChange}
+            disabled={submitting}
             rows={2}
-            className="w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-colors resize-none"
+            className="w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-colors resize-none disabled:bg-zinc-100 disabled:cursor-not-allowed"
             placeholder="Describe the resource or task details..."
             required
           />
@@ -77,21 +81,33 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
-            className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+            disabled={submitting}
+            className="flex-1 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors shadow-xs cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
           >
-            {editingId ? (
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : editingId ? (
               <Check className="w-4 h-4" />
             ) : (
               <Plus className="w-4 h-4" />
             )}
-            <span>{editingId ? "Save Changes" : "Add Item"}</span>
+            <span>
+              {submitting
+                ? editingId
+                  ? "Saving..."
+                  : "Adding..."
+                : editingId
+                ? "Save Changes"
+                : "Add Item"}
+            </span>
           </button>
 
           {editingId && (
             <button
               type="button"
               onClick={onCancelEdit}
-              className="border border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-700 text-sm font-medium py-2 px-4 rounded-md transition-colors cursor-pointer flex items-center gap-1"
+              disabled={submitting}
+              className="border border-zinc-300 bg-white hover:bg-zinc-50 disabled:opacity-50 text-zinc-700 text-sm font-medium py-2 px-4 rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center gap-1"
             >
               <X className="w-4 h-4" />
               <span>Cancel</span>

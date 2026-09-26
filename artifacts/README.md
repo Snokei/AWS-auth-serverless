@@ -49,16 +49,21 @@ AWS Auth/
 ## 🛠️ Local Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Configure Environment Variables
+
 Copy `.env.example` to `.env`:
+
 ```bash
 cp .env.example .env
 ```
+
 Default `.env` contents:
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -67,10 +72,13 @@ JWT_EXPIRES_IN=24h
 ```
 
 ### 3. Run Server Locally
+
 ```bash
 npm start
 ```
+
 Or for auto-reload during development:
+
 ```bash
 npm run dev
 ```
@@ -130,16 +138,19 @@ Open your browser at **`http://localhost:3000`**.
 
 ## 📋 API Reference
 
-| Endpoint | Method | Auth Required | Description |
-| :--- | :--- | :--- | :--- |
-| `/health` | `GET` | No | Health check status & environment info |
-| `/api/register` | `POST` | No | Register new user, returns JWT token |
-| `/api/login` | `POST` | No | Authenticate user, returns JWT token |
-| `/api/me` | `GET` | **Yes (Bearer)** | Returns current user profile & token payload |
-| `/api/verify` | `POST` | No | Verifies JWT token string |
+| Endpoint        | Method | Auth Required    | Description                                  |
+| :-------------- | :----- | :--------------- | :------------------------------------------- |
+| `/health`       | `GET`  | No               | Health check status & environment info       |
+| `/api/register` | `POST` | No               | Register new user, returns JWT token         |
+| `/api/login`    | `POST` | No               | Authenticate user, returns JWT token         |
+| `/api/me`       | `GET`  | **Yes (Bearer)** | Returns current user profile & token payload |
+| `/api/verify`   | `POST` | No               | Verifies JWT token string                    |
 
 ### Example Authorized Request:
+
 ```bash
 curl -X GET http://localhost:3000/api/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
+
+Compress-Archive -Path lambda.js, package.json, .env, src, node_modules -DestinationPath aws-lambda-auth.zip -Force
