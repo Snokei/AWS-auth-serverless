@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   const rawUrl = req.url;
   // Match routes like /default/express-jwt-auth/api/login -> /api/login, or /default/express-jwt-auth/health -> /health
   const routeMatch = rawUrl.match(
-    /^(?:\/[^\/]+){1,3}(\/(?:api|health)(?:[\?\/].*)?)$/,
+    /^(?:\/[^\/]+){1,3}(\/(?:api|health|batch)(?:[\?\/].*)?)$/,
   );
   if (routeMatch && routeMatch[1]) {
     req.url = routeMatch[1];
@@ -43,7 +43,8 @@ app.get("/", (req, res) => {
       health: "GET /health",
       register: "POST /api/register",
       login: "POST /api/login",
-      list: "GET/POST/PUT/DELETE /api/list"
+      list: "GET/POST/PUT/DELETE /api/list",
+      batch: "POST /batch/process",
     },
   });
 });
@@ -64,6 +65,22 @@ app.get("/health", (req, res) => {
 app.use("/api", authRoutes);
 app.use("/api/list", listRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+// Q5: Batch processing (same Lambda Function URL)
+app.post("/batch/process", async (req, res) => {
+  try {
+    const { handler: batchHandler } = require("./batchProcessor");
+    const result = await batchHandler({
+      body: JSON.stringify(req.body || {}),
+    });
+    const payload =
+      typeof result.body === "string" ? JSON.parse(result.body) : result.body;
+    res.status(result.statusCode || 200).json(payload);
+  } catch (err) {
+    console.error("Batch route error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 
 

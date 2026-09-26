@@ -1,6 +1,6 @@
 service: express-jwt-auth
 
-frameworkVersion: '>=3.0.0'
+frameworkVersion: '4'
 
 provider:
   name: aws
@@ -12,10 +12,6 @@ provider:
   httpApi:
     cors: true
     metrics: true
-    throttling:
-      maxConcurrentRequests: 100
-      rateLimit: 50
-      burstLimit: 100
   environment:
     NODE_ENV: production
     USERS_TABLE: express-jwt-users
@@ -39,6 +35,24 @@ provider:
             - !GetAtt ItemsTable.Arn
             - !GetAtt SubscriptionsTable.Arn
             - !Sub "${SubscriptionsTable.Arn}/index/*"
+
+package:
+  individually: false
+  patterns:
+    - '!**'
+    - 'lambda.js'
+    - 'server.js'
+    - 'package.json'
+    - 'package-lock.json'
+    - 'src/**'
+    - 'node_modules/**'
+    - '!node_modules/**/*.md'
+    - '!node_modules/**/LICENSE*'
+    - '!node_modules/**/license*'
+    - '!node_modules/**/CHANGELOG*'
+    - '!node_modules/**/test/**'
+    - '!node_modules/**/tests/**'
+    - '!node_modules/**/*.map'
 
 functions:
   # HTTP API (Express REST server for Auth & Items & REST Notifications)
@@ -64,7 +78,7 @@ functions:
   batchProcessor:
     handler: src/batchProcessor.handler
     memorySize: 512
-    timeout: 60
+    timeout: 29
     events:
       - httpApi:
           path: /batch/process
