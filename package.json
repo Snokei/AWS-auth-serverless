@@ -1,0 +1,35 @@
+{
+  "name": "express-aws-lambda-auth",
+  "version": "1.0.0",
+  "description": "Express.js Authentication App (Login, Register, JWT) configured for AWS Lambda & API Gateway",
+  "main": "lambda.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "deploy": "serverless deploy"
+  },
+  "keywords": [
+    "express",
+    "aws",
+    "lambda",
+    "jwt",
+    "auth",
+    "serverless"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1140.0",
+    "@aws-sdk/lib-dynamodb": "^3.1140.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

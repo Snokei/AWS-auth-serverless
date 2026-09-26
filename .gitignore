@@ -1,0 +1,7 @@
+node_modules/
+.env
+.serverless/
+.aws-sam/
+*.log
+.DS_Store
+aws-lambda-auth.zip
