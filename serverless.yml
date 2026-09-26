@@ -20,6 +20,7 @@ provider:
     NODE_ENV: production
     USERS_TABLE: express-jwt-users
     ITEMS_TABLE: express-jwt-items
+    CONNECTIONS_TABLE: SubscriptionsTable
     JWT_SECRET: ${env:JWT_SECRET, 'change_this_secret_in_aws_console_or_ssm'}
     JWT_EXPIRES_IN: 24h
   iam:
@@ -36,15 +37,32 @@ provider:
           Resource:
             - !GetAtt UsersTable.Arn
             - !GetAtt ItemsTable.Arn
+            - !GetAtt SubscriptionsTable.Arn
+            - !Sub "${SubscriptionsTable.Arn}/index/*"
 
 functions:
+  # HTTP API (Express REST server for Auth & Items & REST Notifications)
   api:
     handler: lambda.handler
     events:
       - httpApi: '*'
 
+  # WebSocket API (Question 4 Real-time Notifications)
+  websocketNotif:
+    handler: src/notificationHandler.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: subscribe
+      - websocket:
+          route: publish
+
 resources:
   Resources:
+    # Question 1: User Auth Table
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -57,6 +75,7 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
 
+    # Question 2: Items CRUD Table
     ItemsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -69,3 +88,28 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
 
+    # Question 4: WebSocket Real-Time Notification Subscriptions Table
+    SubscriptionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SubscriptionsTable
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+          - AttributeName: topic
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: topic-index
+            KeySchema:
+              - AttributeName: topic
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+ 
