@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import ItemForm from "./components/ItemForm";
 import ItemList from "./components/ItemList";
+import NotificationCenter from "./components/NotificationCenter";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import type { Item, FormData, AppState, User, AuthMode } from "./types";
@@ -24,6 +25,7 @@ function App() {
   });
 
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [activeTab, setActiveTab] = useState<"items" | "chat">("items");
 
   const [appState, setAppState] = useState<AppState>({
     items: [],
@@ -246,15 +248,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col">
-      {/* Component 1: Header */}
+      {/* Component 1: Header with Tab Navigation */}
       <Header
         itemCount={appState.items.length}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onLogout={handleLogout}
         user={user}
       />
 
-      {/* Main Container - Vertical Todo-List Layout */}
-      <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-1 space-y-6">
+      {/* Main Container */}
+      <main className="max-w-3xl mx-auto px-4 py-6 w-full flex-1 space-y-6">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md flex justify-between items-center">
             <span>{error}</span>
@@ -268,31 +272,41 @@ function App() {
           </div>
         )}
 
-        {loading && (
-          <div className="text-center py-2 text-xs text-zinc-500 animate-pulse">
-            Syncing with AWS Lambda & DynamoDB...
-          </div>
+        {/* Route 1: Items Management View */}
+        {activeTab === "items" && (
+          <>
+            {loading && (
+              <div className="text-center py-2 text-xs text-zinc-500 animate-pulse">
+                Syncing with AWS Lambda & DynamoDB...
+              </div>
+            )}
+
+            {/* Component 2: Form (Above) */}
+            <ItemForm
+              form={form}
+              editingId={appState.editingId}
+              submitting={submitting}
+              onInputChange={handleInputChange}
+              onSubmit={handleSubmit}
+              onCancelEdit={handleCancelEdit}
+            />
+
+            {/* Component 3: List (Below) */}
+            <ItemList
+              items={appState.items}
+              editingId={appState.editingId}
+              deletingId={deletingId}
+              submitting={submitting}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </>
         )}
 
-        {/* Component 2: Form (Above) */}
-        <ItemForm
-          form={form}
-          editingId={appState.editingId}
-          submitting={submitting}
-          onInputChange={handleInputChange}
-          onSubmit={handleSubmit}
-          onCancelEdit={handleCancelEdit}
-        />
-
-        {/* Component 3: List (Below) */}
-        <ItemList
-          items={appState.items}
-          editingId={appState.editingId}
-          deletingId={deletingId}
-          submitting={submitting}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        {/* Route 2: Real-Time Chat & Notification Center */}
+        {activeTab === "chat" && (
+          <NotificationCenter userName={user.name || user.email} />
+        )}
       </main>
 
     </div>

@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes");
 const listRoutes = require("./routes/listRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
@@ -59,9 +60,10 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Auth & Item API Routes
+// Auth, Item & Notification API Routes
 app.use("/api", authRoutes);
 app.use("/api/list", listRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 
 
