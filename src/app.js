@@ -2,8 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes");
+const listRoutes = require("./routes/listRoutes");
 
 const app = express();
+
 
 // Middleware to handle API Gateway stage & function path prefixes (e.g., /default/express-jwt-auth)
 app.use((req, res, next) => {
@@ -40,6 +42,7 @@ app.get("/", (req, res) => {
       health: "GET /health",
       register: "POST /api/register",
       login: "POST /api/login",
+      list: "GET/POST/PUT/DELETE /api/list"
     },
   });
 });
@@ -56,9 +59,11 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Auth API Routes
+// Auth & Item API Routes
 app.use("/api", authRoutes);
-app.use("/api/list", authRoutes);
+app.use("/api/list", listRoutes);
+
+
 
 // 404 Route Handler
 app.use((req, res) => {

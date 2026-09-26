@@ -12,6 +12,7 @@ provider:
   environment:
     NODE_ENV: production
     USERS_TABLE: express-jwt-users
+    ITEMS_TABLE: express-jwt-items
     JWT_SECRET: ${env:JWT_SECRET, 'change_this_secret_in_aws_console_or_ssm'}
     JWT_EXPIRES_IN: 24h
   iam:
@@ -24,8 +25,10 @@ provider:
             - dynamodb:Scan
             - dynamodb:Query
             - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
           Resource:
             - !GetAtt UsersTable.Arn
+            - !GetAtt ItemsTable.Arn
 
 functions:
   api:
@@ -46,3 +49,16 @@ resources:
           - AttributeName: email
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
+
+    ItemsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: express-jwt-items
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+

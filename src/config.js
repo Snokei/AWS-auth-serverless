@@ -6,5 +6,7 @@ module.exports = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   nodeEnv: process.env.NODE_ENV || 'development',
   usersTable: process.env.USERS_TABLE || 'express-jwt-users',
+  itemsTable: process.env.ITEMS_TABLE || 'express-jwt-items',
   awsRegion: process.env.AWS_REGION || 'us-east-1'
 };
+

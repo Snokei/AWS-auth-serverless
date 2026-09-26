@@ -1,29 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import ItemForm from "./components/ItemForm";
 import ItemList from "./components/ItemList";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import type { Item, FormData, AppState, User, AuthMode } from "./types";
+import { getApiUrl } from "./config";
 import "./App.css";
 
 const INITIAL_FORM: FormData = {
   name: "",
   description: "",
 };
-
-const INITIAL_ITEMS: Item[] = [
-  {
-    id: "1",
-    name: "Serverless Auth Module",
-    description: "Lambda function for JWT authentication & DynamoDB",
-  },
-  {
-    id: "2",
-    name: "DynamoDB Table Sync",
-    description: "Event-driven sync between user tables",
-  },
-];
 
 function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -38,11 +26,38 @@ function App() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
 
   const [appState, setAppState] = useState<AppState>({
-    items: INITIAL_ITEMS,
+    items: [],
     editingId: null,
   });
 
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch items from backend API when logged in
+  useEffect(() => {
+    if (!user) return;
+    fetchItems();
+  }, [user]);
+
+  const fetchItems = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(getApiUrl("list"));
+      const data = await res.json();
+      if (res.ok && data.items) {
+        setAppState((prev) => ({ ...prev, items: data.items }));
+      } else {
+        setError(data.error || "Failed to load items");
+      }
+    } catch (err: any) {
+      console.error("Error fetching items:", err);
+      setError("Network error connecting to backend API.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuthSuccess = (userData: User, token?: string) => {
     setUser(userData);
@@ -68,37 +83,59 @@ function App() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.description.trim()) return;
 
-    if (appState.editingId) {
-      setAppState((prev) => ({
-        ...prev,
-        items: prev.items.map((item) =>
-          item.id === prev.editingId
-            ? {
-                ...item,
-                name: form.name.trim(),
-                description: form.description.trim(),
-              }
-            : item
-        ),
-        editingId: null,
-      }));
-    } else {
-      const newItem: Item = {
-        id: Date.now().toString(),
-        name: form.name.trim(),
-        description: form.description.trim(),
-      };
-      setAppState((prev) => ({
-        ...prev,
-        items: [newItem, ...prev.items],
-      }));
+    setError(null);
+    try {
+      if (appState.editingId) {
+        // UPDATE Item
+        const res = await fetch(getApiUrl(`list/${appState.editingId}`), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            description: form.description.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.item) {
+          setAppState((prev) => ({
+            ...prev,
+            items: prev.items.map((item) =>
+              item.id === prev.editingId ? data.item : item
+            ),
+            editingId: null,
+          }));
+        } else {
+          setError(data.error || "Failed to update item");
+        }
+      } else {
+        // CREATE Item
+        const res = await fetch(getApiUrl("list"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            description: form.description.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.item) {
+          setAppState((prev) => ({
+            ...prev,
+            items: [data.item, ...prev.items],
+          }));
+        } else {
+          setError(data.error || "Failed to create item");
+        }
+      }
+      setForm(INITIAL_FORM);
+    } catch (err: any) {
+      console.error("Submit error:", err);
+      setError("Network error saving item.");
     }
-
-    setForm(INITIAL_FORM);
   };
 
   const handleEdit = (item: Item) => {
@@ -109,24 +146,39 @@ function App() {
     });
   };
 
-  const handleDelete = (id: string) => {
-    setAppState((prev) => {
-      const isEditingDeleted = prev.editingId === id;
-      if (isEditingDeleted) {
-        setForm(INITIAL_FORM);
+  const handleDelete = async (id: string) => {
+    setError(null);
+    try {
+      const res = await fetch(getApiUrl(`list/${id}`), {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setAppState((prev) => {
+          const isEditingDeleted = prev.editingId === id;
+          if (isEditingDeleted) {
+            setForm(INITIAL_FORM);
+          }
+          return {
+            ...prev,
+            items: prev.items.filter((item) => item.id !== id),
+            ...(isEditingDeleted ? { editingId: null } : {}),
+          };
+        });
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to delete item");
       }
-      return {
-        ...prev,
-        items: prev.items.filter((item) => item.id !== id),
-        ...(isEditingDeleted ? { editingId: null } : {}),
-      };
-    });
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      setError("Network error deleting item.");
+    }
   };
 
   const handleCancelEdit = () => {
     setAppState((prev) => ({ ...prev, editingId: null }));
     setForm(INITIAL_FORM);
   };
+
 
   if (!user) {
     return (
@@ -194,6 +246,25 @@ function App() {
 
       {/* Main Container - Vertical Todo-List Layout */}
       <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-1 space-y-6">
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md flex justify-between items-center">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="text-red-500 font-bold hover:text-red-700 ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-2 text-xs text-zinc-500 animate-pulse">
+            Syncing with AWS Lambda & DynamoDB...
+          </div>
+        )}
+
         {/* Component 2: Form (Above) */}
         <ItemForm
           form={form}
@@ -211,6 +282,7 @@ function App() {
           onDelete={handleDelete}
         />
       </main>
+
     </div>
   );
 }

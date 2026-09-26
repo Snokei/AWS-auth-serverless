@@ -17,6 +17,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ItemsTable
       Events:
         ApiRoot:
           Type: HttpApi
@@ -32,6 +34,7 @@ Resources:
         Variables:
           NODE_ENV: production
           USERS_TABLE: !Ref UsersTable
+          ITEMS_TABLE: !Ref ItemsTable
           JWT_SECRET: "change_this_secret_in_aws_console_or_ssm"
           JWT_EXPIRES_IN: "24h"
 
@@ -46,6 +49,19 @@ Resources:
         - AttributeName: email
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+
+  ItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: express-jwt-items
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
 
 Outputs:
   WebEndpoint:
