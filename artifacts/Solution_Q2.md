@@ -29,8 +29,10 @@ I kept the frontend modular with separate components for the item list and form.
 - **Frontend (React.js):** Disables input fields and submit/action buttons (`disabled={submitting}`) while showing loading spinners (`Loader2`) during API requests to prevent double-clicking and duplicate requests.
 - **API Gateway (AWS):** Configured in `serverless.yml` with a **50 requests/second rate limit and 100-request burst limit**, automatically returning `429 Too Many Requests` if limits are exceeded.
 
-> [!NOTE]
-> AWS API Gateway handles default rate limiting automatically out-of-the-box (10,000 req/sec regional limit). In my setup, I explicitly defined custom lower limits in `serverless.yml` to protect DynamoDB from spikes. Additionally, rate limiting can also be handled directly inside Node.js/Lambda using `express-rate-limit` middleware (with Redis) for per-user or per-JWT granular throttling.
+>
+> **Production Setup for Rate Limiting & Monitoring:**
+> - **Rate Limiting (AWS + Express):** In production, API Gateway handles baseline perimeter throttling (`50 req/sec`) alongside **AWS WAF** rate-based rules to block malicious IPs. For per-user or JWT-based quotas, I use `express-rate-limit` with an **Amazon ElastiCache (Redis)** store inside the Express app so state persists across serverless Lambda executions.
+> - **Monitoring & Observability (AWS CloudWatch & X-Ray):** I configure **AWS CloudWatch Alarms** to trigger SNS alerts (Slack/Email) if `429` (Throttled Requests) or `5XX` error metrics spike. **AWS X-Ray** is enabled for distributed tracing to monitor end-to-end latency across API Gateway, Lambda, and DynamoDB.
 
 ### Error Handling
 
