@@ -1,12 +1,14 @@
 import React from "react";
-import { LogOut, Database } from "lucide-react";
+import { LogOut, Database, User as UserIcon } from "lucide-react";
+import type { User } from "../types";
 
 interface HeaderProps {
   itemCount: number;
   onLogout?: () => void;
+  user?: User | null;
 }
 
-export const Header: React.FC<HeaderProps> = ({ itemCount, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ itemCount, onLogout, user }) => {
   const handleLogoutClick = () => {
     if (onLogout) {
       onLogout();
@@ -33,8 +35,15 @@ export const Header: React.FC<HeaderProps> = ({ itemCount, onLogout }) => {
           </div>
         </div>
 
-        {/* Right Section: Badge & Logout Button */}
+        {/* Right Section: Badge, User Info & Logout Button */}
         <div className="flex items-center gap-3">
+          {user && (
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-md px-2.5 py-1">
+              <UserIcon className="w-3.5 h-3.5 text-zinc-500" />
+              <span className="font-medium text-zinc-900">{user.name || user.email}</span>
+            </div>
+          )}
+
           <div className="text-xs text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-full px-3 py-1 font-medium">
             {itemCount} {itemCount === 1 ? "item" : "items"}
           </div>
@@ -55,3 +64,4 @@ export const Header: React.FC<HeaderProps> = ({ itemCount, onLogout }) => {
 };
 
 export default Header;
+

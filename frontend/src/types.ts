@@ -14,3 +14,11 @@ export interface AppState {
   items: Item[];
   editingId: string | null;
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export type AuthMode = "login" | "register";
